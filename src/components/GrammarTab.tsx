@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { cn } from '../lib/utils';
-import type { TranscriptEntry, ModelState } from '../types';
+import { Check, FileCheck2, Loader2, PencilLine, Sparkles, Wand2 } from 'lucide-react';
+import type { GrammarCheck, TranscriptEntry, ModelState } from '../types';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Progress } from './ui/progress';
+import { Switch } from './ui/switch';
 
 interface Props {
   entries: TranscriptEntry[];
+  grammarChecks: GrammarCheck[];
   grammarState: ModelState;
   grammarProgress: Record<string, number>;
   autoCorrect: boolean;
@@ -15,7 +22,7 @@ interface Props {
 }
 
 export default function GrammarTab({
-  entries, grammarState, grammarProgress,
+  entries, grammarChecks, grammarState, grammarProgress,
   autoCorrect, onLoadGrammar, onAutoCorrectChange,
   onCorrectEntry, onCorrectAll, onCheckFreeText,
 }: Props) {
@@ -29,115 +36,128 @@ export default function GrammarTab({
   const uncorrectedCount = entries.filter(e => e.correctionStatus === 'none').length;
 
   return (
-    <div className="flex flex-col gap-5">
-
-      {/* Grammar model row */}
-      <div className="bg-[#1a1d27] border border-[#2e3247] rounded-xl p-4 flex flex-col gap-4">
-        {/* Status + load button */}
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex-1 text-sm">
-            {grammarState === 'idle' && <span className="text-[#8b8fa8]">Grammar model not loaded</span>}
+    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
+      <div className="flex flex-col gap-5">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles size={17} className="text-amber-300" />
+              Grammar model
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="min-w-0 flex-1 text-sm">
+                {grammarState === 'idle' && <span className="text-slate-400">Grammar model not loaded</span>}
             {grammarState === 'loading' && (
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-amber-400">Loading grammar model… {grammarOverall}%</span>
+                      <span className="text-amber-300">Loading grammar model</span>
+                      <span className="tabular-nums text-slate-400">{grammarOverall}%</span>
                 </div>
-                <div className="h-1.5 w-full bg-[#252836] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full transition-all duration-200"
-                    style={{ width: `${grammarOverall}%` }}
-                  />
-                </div>
+                    <Progress value={grammarOverall} indicatorClassName="bg-amber-300" />
               </div>
             )}
-            {grammarState === 'ready' && <span className="text-[#4ade80]">✓ Grammar model ready</span>}
+                {grammarState === 'ready' && <span className="text-emerald-300">Grammar model ready</span>}
           </div>
           {grammarState === 'idle' && (
-            <button
-              onClick={onLoadGrammar}
-              className="text-sm text-[#8b8fa8] border border-[#2e3247] px-3 py-1.5 rounded-lg hover:text-[#e8eaf0] hover:border-[#8b8fa8] transition-colors shrink-0"
-            >
+                <Button onClick={onLoadGrammar} size="sm">
+                  <Wand2 size={15} />
               Load grammar model
-            </button>
+                </Button>
           )}
         </div>
 
-        {/* Controls */}
-        <div className="flex items-center gap-4 flex-wrap">
-          {/* Toggle switch */}
-          <label className="flex items-center gap-2.5 cursor-pointer select-none">
-            <button
-              role="switch"
-              aria-checked={autoCorrect}
-              onClick={() => onAutoCorrectChange(!autoCorrect)}
+            <div className="flex flex-wrap items-center gap-3">
+              <Switch
+                checked={autoCorrect}
               disabled={grammarState === 'loading'}
-              className={cn(
-                'relative w-9 h-5 rounded-full border transition-all duration-200 outline-none',
-                'disabled:opacity-40 disabled:cursor-not-allowed',
-                autoCorrect
-                  ? 'bg-[#6c63ff]/25 border-[#6c63ff]'
-                  : 'bg-[#252836] border-[#2e3247]',
-              )}
-            >
-              <span
-                className={cn(
-                  'absolute top-0.5 w-3.5 h-3.5 rounded-full transition-all duration-200',
-                  autoCorrect ? 'left-[18px] bg-[#6c63ff]' : 'left-0.5 bg-[#8b8fa8]',
-                )}
+                onCheckedChange={onAutoCorrectChange}
+                label="Auto-correct new transcriptions"
               />
-            </button>
-            <span className="text-sm text-[#8b8fa8]">Auto-correct new transcriptions</span>
-          </label>
-
-          <button
+              <Button
             onClick={onCorrectAll}
             disabled={grammarState !== 'ready' || uncorrectedCount === 0}
-            className="ml-auto text-sm text-[#8b8fa8] border border-[#2e3247] px-3 py-1.5 rounded-lg hover:text-[#e8eaf0] hover:border-[#8b8fa8] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                size="sm"
+                className="ml-auto"
           >
+                <FileCheck2 size={15} />
             Correct all {uncorrectedCount > 0 ? `(${uncorrectedCount})` : ''}
-          </button>
-        </div>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Transcript review</CardTitle>
+            <Badge>{entries.length} items</Badge>
+          </CardHeader>
+          <CardContent className="flex max-h-[620px] flex-col gap-3 overflow-y-auto">
+            {entries.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-500">
+                Recorded transcript entries will be available here for grammar correction.
+              </p>
+            ) : (
+              entries.map(entry => (
+                <GrammarEntryCard
+                  key={entry.id}
+                  entry={entry}
+                  grammarReady={grammarState === 'ready'}
+                  onCorrect={(text) => onCorrectEntry(entry.id, text)}
+                />
+              ))
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Free-text input */}
-      <div className="bg-[#1a1d27] border border-[#2e3247] rounded-xl p-4 flex flex-col gap-3">
-        <h3 className="text-xs font-semibold text-[#8b8fa8] uppercase tracking-widest">Check free text</h3>
-        <textarea
-          value={freeText}
-          onChange={e => setFreeText(e.target.value)}
-          placeholder="Type or paste text to check…"
-          rows={3}
-          className="w-full bg-[#252836] border border-[#2e3247] rounded-lg text-sm leading-relaxed text-[#e8eaf0] px-3 py-2 resize-none outline-none focus:border-[#6c63ff] transition-colors placeholder:text-[#8b8fa8]/50"
-        />
-        <div className="flex justify-end">
-          <button
-            onClick={() => { onCheckFreeText(freeText); setFreeText(''); }}
-            disabled={grammarState !== 'ready' || !freeText.trim()}
-            className="text-sm font-semibold bg-[#6c63ff] hover:bg-[#4c44cc] text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            Check grammar
-          </button>
-        </div>
-      </div>
-
-      {/* Entry list */}
-      <div className="flex flex-col gap-3">
-        {entries.length === 0 ? (
-          <p className="text-sm text-[#8b8fa8] text-center py-6">
-            No entries yet. Type text above or record on the Record tab.
-          </p>
-        ) : (
-          entries.map(entry => (
-            <GrammarEntryCard
-              key={entry.id}
-              entry={entry}
-              grammarReady={grammarState === 'ready'}
-              onCorrect={(text) => onCorrectEntry(entry.id, text)}
+      <div className="flex flex-col gap-5">
+        <Card>
+          <CardHeader>
+            <CardTitle>Check free text</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            <textarea
+              value={freeText}
+              onChange={e => setFreeText(e.target.value)}
+              placeholder="Type or paste text to check..."
+              rows={7}
+              className="w-full resize-none rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm leading-6 text-slate-100 outline-none transition-colors placeholder:text-slate-500 focus:border-sky-400"
             />
-          ))
-        )}
+            <Button
+              variant="primary"
+              onClick={() => { onCheckFreeText(freeText.trim()); setFreeText(''); }}
+              disabled={grammarState !== 'ready' || !freeText.trim()}
+              className="self-end"
+            >
+              <Wand2 size={16} />
+              Check grammar
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Free text output</CardTitle>
+            <Badge>{grammarChecks.length} checks</Badge>
+          </CardHeader>
+          <CardContent className="max-h-[450px] overflow-y-auto p-0">
+            {grammarChecks.length === 0 ? (
+              <p className="px-5 py-10 text-center text-sm text-slate-500">
+                Free-text grammar results will appear here, separate from the transcript.
+              </p>
+            ) : (
+              <div className="divide-y divide-slate-800">
+                {grammarChecks.map(check => (
+                  <GrammarCheckResult key={check.id} check={check} />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
-    </div>
+        </div>
   );
 }
 
@@ -155,65 +175,90 @@ function GrammarEntryCard({ entry, grammarReady, onCorrect }: CardProps) {
   const isChanged = isCorrected && entry.corrected !== entry.text;
 
   return (
-    <div className="bg-[#1a1d27] border border-[#2e3247] rounded-xl p-4 flex flex-col gap-2 animate-fade-in">
-      {/* Meta row */}
+    <article className="animate-fade-in rounded-lg border border-slate-800 bg-slate-900/50 p-4">
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-[#8b8fa8] tabular-nums">
+        <span className="text-xs text-slate-500 tabular-nums">
           {entry.timestamp.toLocaleTimeString()}
         </span>
 
         {isCorrected && (
-          <span className={cn(
-            'text-[10px] font-medium px-2 py-0.5 rounded',
-            isChanged
-              ? 'bg-lime-400/10 text-lime-400'
-              : 'bg-emerald-400/10 text-emerald-400',
-          )}>
-            {isChanged ? '✎ Corrected' : '✓ No changes'}
-          </span>
+          <Badge variant={isChanged ? 'info' : 'success'}>
+            {isChanged ? <PencilLine size={12} /> : <Check size={12} />}
+            {isChanged ? 'Corrected' : 'No changes'}
+          </Badge>
         )}
 
         {entry.correctionStatus === 'correcting' && (
-          <span className="text-[10px] text-amber-400">Correcting…</span>
+          <Badge variant="warning">
+            <Loader2 size={12} className="animate-spin" />
+            Correcting
+          </Badge>
         )}
 
         {entry.correctionStatus === 'none' && (
-          <button
+          <Button
             onClick={() => onCorrect(editedText)}
             disabled={!grammarReady || !editedText.trim()}
-            className="ml-auto text-xs text-[#8b8fa8] border border-[#2e3247] px-2.5 py-1 rounded-lg hover:text-[#e8eaf0] hover:border-[#8b8fa8] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            size="sm"
+            className="ml-auto"
           >
             Correct
-          </button>
+          </Button>
         )}
       </div>
 
-      {/* Editable text when not yet corrected */}
       {entry.correctionStatus === 'none' && (
         <textarea
           value={editedText}
           onChange={e => setEditedText(e.target.value)}
           rows={Math.max(2, Math.ceil(editedText.length / 70))}
-          className="w-full bg-[#252836] border border-[#2e3247] rounded-lg text-[0.95rem] leading-relaxed text-[#e8eaf0] px-3 py-2 resize-none outline-none focus:border-[#6c63ff] transition-colors"
+          className="mt-3 w-full resize-none rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm leading-6 text-slate-100 outline-none transition-colors focus:border-sky-400"
         />
       )}
 
-      {/* Read-only text while correcting */}
       {entry.correctionStatus === 'correcting' && (
-        <p className="text-[0.95rem] leading-relaxed text-[#e8eaf0]">{editedText}</p>
+        <p className="mt-3 text-sm leading-6 text-slate-200">{editedText}</p>
       )}
 
-      {/* Result: original (struck through if changed) + corrected */}
       {isCorrected && (
-        <>
-          <p className={cn('text-[0.95rem] leading-relaxed', isChanged ? 'text-[#8b8fa8] line-through' : 'text-[#e8eaf0]')}>
+        <div className="mt-3 flex flex-col gap-2">
+          <p className={cn('text-sm leading-6', isChanged ? 'text-slate-500 line-through' : 'text-slate-100')}>
             {entry.text}
           </p>
           {isChanged && (
-            <p className="text-[0.95rem] leading-relaxed text-lime-400">{entry.corrected}</p>
+            <p className="rounded-md border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-sm leading-6 text-emerald-100">{entry.corrected}</p>
           )}
-        </>
+        </div>
       )}
-    </div>
+    </article>
+  );
+}
+
+function GrammarCheckResult({ check }: { check: GrammarCheck }) {
+  const isDone = check.correctionStatus === 'done';
+  const isChanged = isDone && check.corrected !== check.text;
+
+  return (
+    <article className="animate-fade-in px-5 py-4">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="text-xs tabular-nums text-slate-500">{check.timestamp.toLocaleTimeString()}</span>
+        {isDone ? (
+          <Badge variant={isChanged ? 'info' : 'success'}>{isChanged ? 'Corrected' : 'No changes'}</Badge>
+        ) : (
+          <Badge variant="warning">
+            <Loader2 size={12} className="animate-spin" />
+            Checking
+          </Badge>
+        )}
+      </div>
+      <p className={cn('text-sm leading-6', isChanged ? 'text-slate-500 line-through' : 'text-slate-100')}>
+        {check.text}
+      </p>
+      {isChanged && (
+        <p className="mt-3 rounded-md border border-sky-500/20 bg-sky-500/10 px-3 py-2 text-sm leading-6 text-sky-100">
+          {check.corrected}
+        </p>
+      )}
+    </article>
   );
 }

@@ -6,6 +6,7 @@ import type { WorkerMessage, Mode } from './types';
 import Header from './components/Header';
 import RecordTab from './components/RecordTab';
 import GrammarTab from './components/GrammarTab';
+import { cn } from './lib/utils';
 
 const GRAMMAR_MODEL = 'Xenova/grammar-synthesis-small';
 
@@ -39,7 +40,11 @@ export default function App() {
       pendingAutoCorrect.current.push({ id, text: msg.text });
       if (continuousRef.current) beginRecording();
     } else if (msg.type === 'correction') {
-      dispatch({ type: 'SET_CORRECTION', id: msg.id, corrected: msg.corrected });
+      if (msg.id.startsWith('free-')) {
+        dispatch({ type: 'SET_GRAMMAR_CHECK_CORRECTION', id: msg.id, corrected: msg.corrected });
+      } else {
+        dispatch({ type: 'SET_CORRECTION', id: msg.id, corrected: msg.corrected });
+      }
     } else if (msg.type === 'error') {
       dispatch({ type: 'TRANSCRIBING_DONE' });
       dispatch({ type: 'CONTINUOUS_ACTIVE', active: false });
@@ -111,9 +116,8 @@ export default function App() {
   }, [state.entries, triggerCorrection]);
 
   const checkFreeText = useCallback((text: string) => {
-    const id = String(Date.now());
-    dispatch({ type: 'ADD_ENTRY', id, text });
-    dispatch({ type: 'SET_CORRECTION_STATUS', id, status: 'correcting' });
+    const id = `free-${Date.now()}`;
+    dispatch({ type: 'ADD_GRAMMAR_CHECK', id, text });
     workerRef.current.correct(id, text);
   }, []);
 
@@ -192,8 +196,8 @@ export default function App() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-[#e8eaf0] flex flex-col items-center py-8 px-4">
-      <div className="w-full max-w-2xl flex flex-col gap-6">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
 
         <Header
           modelState={state.modelState}
@@ -203,18 +207,17 @@ export default function App() {
           onUnload={() => unloadWhisper(state.grammarState === 'ready')}
         />
 
-        {/* Tab nav */}
-        <div className="flex border-b border-[#2e3247]">
+        <div className="inline-flex w-fit rounded-lg border border-slate-800 bg-slate-950 p-1">
           {(['record', 'grammar'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => dispatch({ type: 'SET_TAB', tab })}
-              className={[
-                'px-4 py-2 text-sm font-medium capitalize border-b-2 -mb-px transition-colors',
+              className={cn(
+                'rounded-md px-4 py-2 text-sm font-medium capitalize transition-colors',
                 state.activeTab === tab
-                  ? 'border-[#6c63ff] text-[#6c63ff]'
-                  : 'border-transparent text-[#8b8fa8] hover:text-[#e8eaf0]',
-              ].join(' ')}
+                  ? 'bg-slate-800 text-slate-50'
+                  : 'text-slate-400 hover:text-slate-100',
+              )}
             >
               {tab}
             </button>
@@ -235,6 +238,7 @@ export default function App() {
         {state.activeTab === 'grammar' && (
           <GrammarTab
             entries={state.entries}
+            grammarChecks={state.grammarChecks}
             grammarState={state.grammarState}
             grammarProgress={state.grammarProgress}
             autoCorrect={state.autoCorrect}

@@ -1,6 +1,9 @@
-import { Mic } from 'lucide-react';
+import { Clock, Mic, Radio, ScrollText, Waves } from 'lucide-react';
 import { cn } from '../lib/utils';
 import type { Mode, TranscriptEntry } from '../types';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 interface Props {
   modelReady: boolean;
@@ -23,84 +26,89 @@ export default function RecordTab({ modelReady, recordingState, mode, entries, o
   };
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* Record button + controls */}
-      <div className="flex flex-col items-center gap-4">
-        <button
-          onClick={onToggleRecord}
-          disabled={isDisabled}
-          className={cn(
-            'w-28 h-28 rounded-full flex flex-col items-center justify-center',
-            'border-2 transition-all duration-200 select-none outline-none',
-            'disabled:opacity-40 disabled:cursor-not-allowed',
-            isRecording
-              ? 'bg-red-500/10 border-red-500 animate-pulse-ring'
-              : 'bg-[#1a1d27] border-[#2e3247] hover:border-[#6c63ff] hover:bg-[#252836]',
-          )}
-        >
-          <Mic
-            size={36}
+    <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Radio size={17} className="text-sky-300" />
+            Capture
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center gap-5">
+          <button
+            onClick={onToggleRecord}
+            disabled={isDisabled}
+            aria-label={isRecording ? 'Stop recording' : 'Start recording'}
             className={cn(
-              'transition-colors',
-              isRecording ? 'text-red-500' : 'text-[#8b8fa8]',
+              'flex h-32 w-32 items-center justify-center rounded-full border outline-none transition-all duration-200',
+              'focus-visible:ring-2 focus-visible:ring-sky-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950',
+              'disabled:cursor-not-allowed disabled:opacity-40',
+              isRecording
+                ? 'animate-pulse-ring border-rose-400 bg-rose-500/10 text-rose-300'
+                : 'border-slate-700 bg-slate-900 text-slate-400 hover:border-sky-400 hover:text-sky-300',
             )}
-          />
-        </button>
+          >
+            <Mic size={42} />
+          </button>
 
-        {/* Mode bar */}
-        <div className="flex gap-2">
-          {(['auto', 'continuous'] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => onSetMode(m)}
-              disabled={!modelReady}
-              className={cn(
-                'text-xs px-3 py-1.5 rounded-lg border transition-colors capitalize',
-                'disabled:opacity-40 disabled:cursor-not-allowed',
-                mode === m
-                  ? 'bg-[#6c63ff]/15 text-[#6c63ff] border-[#6c63ff]'
-                  : 'bg-[#252836] text-[#8b8fa8] border-[#2e3247] hover:text-[#e8eaf0]',
-              )}
-            >
-              {m === 'auto' ? 'Auto-stop' : 'Continuous'}
-              <kbd className="ml-1.5 text-[10px] border border-current/30 rounded px-1">
-                {m === 'auto' ? '2' : '3'}
-              </kbd>
-            </button>
-          ))}
-        </div>
+          <div className="grid w-full grid-cols-2 gap-2">
+            {(['auto', 'continuous'] as const).map((m) => (
+              <Button
+                key={m}
+                onClick={() => onSetMode(m)}
+                disabled={!modelReady}
+                variant={mode === m ? 'primary' : 'secondary'}
+                size="sm"
+                className="h-9"
+              >
+                {m === 'auto' ? 'Auto-stop' : 'Continuous'}
+                <kbd className={cn('rounded border px-1 text-[10px]', mode === m ? 'border-slate-950/30' : 'border-slate-600')}>
+                  {m === 'auto' ? '2' : '3'}
+                </kbd>
+              </Button>
+            ))}
+          </div>
 
-        {/* Status */}
-        <span className="text-sm text-[#8b8fa8] min-h-5">
-          {!modelReady ? 'Load a speech-to-text model above to start recording'
-            : isRecording ? 'Listening…'
-            : isTranscribing ? 'Transcribing…'
-            : hint[mode]}
-        </span>
-      </div>
+          <div className="flex min-h-16 w-full items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/60 px-4 py-3">
+            <Waves size={18} className={isRecording ? 'text-rose-300' : 'text-slate-500'} />
+            <span className="text-sm text-slate-300">
+              {!modelReady ? 'Load a speech-to-text model above to start recording'
+                : isRecording ? 'Listening'
+                : isTranscribing ? 'Transcribing'
+                : hint[mode]}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Transcript */}
-      <div className="bg-[#1a1d27] border border-[#2e3247] rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-[#2e3247]">
-          <h2 className="text-xs font-semibold text-[#8b8fa8] uppercase tracking-widest">Transcript</h2>
-        </div>
-        <div className="max-h-80 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin">
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <ScrollText size={17} className="text-emerald-300" />
+            Transcript
+          </CardTitle>
+          <Badge>{entries.length} items</Badge>
+        </CardHeader>
+        <CardContent className="max-h-[520px] overflow-y-auto p-0">
           {entries.length === 0 ? (
-            <p className="text-sm text-[#8b8fa8] text-center py-8">
+            <p className="px-5 py-12 text-center text-sm text-slate-500">
               Transcriptions will appear here after you record.
             </p>
           ) : (
-            entries.map(entry => (
-              <div key={entry.id} className="flex flex-col gap-0.5 animate-fade-in">
-                <span className="text-xs text-[#8b8fa8] tabular-nums">
-                  {entry.timestamp.toLocaleTimeString()}
-                </span>
-                <p className="text-base leading-relaxed text-[#e8eaf0]">{entry.text}</p>
-              </div>
-            ))
+            <div className="divide-y divide-slate-800">
+              {entries.map(entry => (
+                <article key={entry.id} className="animate-fade-in px-5 py-4">
+                  <div className="mb-2 flex items-center gap-2 text-xs text-slate-500">
+                    <Clock size={14} />
+                    <span className="tabular-nums">{entry.timestamp.toLocaleTimeString()}</span>
+                  </div>
+                  <p className="text-base leading-7 text-slate-100">{entry.text}</p>
+                </article>
+              ))}
+            </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

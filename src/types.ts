@@ -11,6 +11,14 @@ export interface TranscriptEntry {
   correctionStatus: CorrectionStatus;
 }
 
+export interface GrammarCheck {
+  id: string;
+  text: string;
+  timestamp: Date;
+  corrected?: string;
+  correctionStatus: Exclude<CorrectionStatus, 'none'>;
+}
+
 export interface AppState {
   modelState: ModelState;
   modelLabel: string;
@@ -26,6 +34,7 @@ export interface AppState {
 
   activeTab: Tab;
   entries: TranscriptEntry[];
+  grammarChecks: GrammarCheck[];
 }
 
 export type AppAction =
@@ -44,6 +53,8 @@ export type AppAction =
   | { type: 'ADD_ENTRY'; id: string; text: string }
   | { type: 'SET_CORRECTION'; id: string; corrected: string }
   | { type: 'SET_CORRECTION_STATUS'; id: string; status: CorrectionStatus }
+  | { type: 'ADD_GRAMMAR_CHECK'; id: string; text: string }
+  | { type: 'SET_GRAMMAR_CHECK_CORRECTION'; id: string; corrected: string }
   | { type: 'SET_AUTO_CORRECT'; enabled: boolean }
   | { type: 'SET_TAB'; tab: Tab }
   | { type: 'CONTINUOUS_ACTIVE'; active: boolean };

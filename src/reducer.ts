@@ -15,6 +15,7 @@ export const initialState: AppState = {
 
   activeTab: 'record',
   entries: [],
+  grammarChecks: [],
 };
 
 export function appReducer(state: AppState, action: AppAction): AppState {
@@ -36,6 +37,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...initialState,
         entries: state.entries,
+        grammarChecks: state.grammarChecks,
         activeTab: state.activeTab,
         // Grammar model lives in the same worker — preserve its state across Whisper reloads
         grammarState: state.grammarState,
@@ -93,6 +95,25 @@ export function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         entries: state.entries.map(e =>
           e.id === action.id ? { ...e, corrected: action.corrected, correctionStatus: 'done' } : e,
+        ),
+      };
+
+    case 'ADD_GRAMMAR_CHECK':
+      return {
+        ...state,
+        grammarChecks: [{
+          id: action.id,
+          text: action.text,
+          timestamp: new Date(),
+          correctionStatus: 'correcting',
+        }, ...state.grammarChecks],
+      };
+
+    case 'SET_GRAMMAR_CHECK_CORRECTION':
+      return {
+        ...state,
+        grammarChecks: state.grammarChecks.map(check =>
+          check.id === action.id ? { ...check, corrected: action.corrected, correctionStatus: 'done' } : check,
         ),
       };
 
