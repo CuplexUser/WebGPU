@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGPU Speech-to-Text</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Speech to Text</h1>
+      <p class="subtitle">WebGPU-accelerated transcription via Whisper — runs entirely in your browser</p>
+
+      <div id="model-selector">
+        <label for="model">Model</label>
+        <select id="model">
+          <option value="Xenova/whisper-tiny">Whisper Tiny (~39 MB, fastest)</option>
+          <option value="Xenova/whisper-base" selected>Whisper Base (~74 MB, recommended)</option>
+          <option value="Xenova/whisper-small">Whisper Small (~244 MB, high memory)</option>
+        </select>
+        <button id="load-btn">Load Model</button>
+      </div>
+
+      <div id="model-loaded" hidden>
+        <span class="loaded-icon">&#10003;</span>
+        <span id="loaded-label"></span>
+        <button id="unload-btn">Change model</button>
+      </div>
+    </header>
+
+    <div id="progress-area" hidden>
+      <div id="progress-label">Initializing...</div>
+      <progress id="progress-bar" value="0" max="100"></progress>
+      <div id="progress-detail"></div>
+    </div>
+
+    <div id="controls" hidden>
+      <button id="record-btn" class="record-btn" disabled>
+        <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="2" width="6" height="11" rx="3"/>
+          <path d="M5 10a7 7 0 0 0 14 0"/>
+          <line x1="12" y1="19" x2="12" y2="22"/>
+          <line x1="8" y1="22" x2="16" y2="22"/>
+        </svg>
+      </button>
+      <span class="btn-label">Space to record</span>
+
+      <div id="mode-bar">
+        <button id="mode-auto" class="mode-btn">
+          Auto-stop <kbd>2</kbd>
+        </button>
+        <button id="mode-continuous" class="mode-btn">
+          Continuous <kbd>3</kbd>
+        </button>
+      </div>
+
+      <div id="status"></div>
+    </div>
+
+    <section id="output">
+      <div class="output-header">
+        <h2>Transcript</h2>
+      </div>
+      <div id="transcript">
+        <p id="transcript-empty">Transcriptions will appear here after you record.</p>
+      </div>
+    </section>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
