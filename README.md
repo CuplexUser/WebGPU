@@ -55,10 +55,12 @@ Models are downloaded once and cached in the browser's Cache Storage.
 
 ## Architecture
 
-- **`src/worker.js`** — Whisper pipeline runs in a Web Worker to keep the UI responsive
-- **`src/audio.js`** — Microphone capture, VAD via `AnalyserNode`, and resampling to 16 kHz mono via `OfflineAudioContext`
-- **`src/pipeline/index.js`** — Message protocol between main thread and worker (extension point for future VAD, LLM, and TTS stages)
-- **`vite.config.js`** — Sets `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` headers required for `SharedArrayBuffer` (used by the ONNX WASM backend)
+- **`src/App.tsx`** — React application shell for model loading, recording modes, transcription, and grammar correction
+- **`src/services/AudioRecorder.ts`** — Microphone capture, VAD via `AnalyserNode`, and resampling to 16 kHz mono via `OfflineAudioContext`
+- **`src/services/WorkerService.ts`** — Main-thread wrapper around the inference worker
+- **`src/worker.ts`** — Whisper and grammar pipelines run in a Web Worker to keep the UI responsive
+- **`src/pipeline/index.ts`** — Message protocol between main thread and worker (extension point for future VAD, LLM, and TTS stages)
+- **`vite.config.ts`** — Sets `Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy` headers required for `SharedArrayBuffer` (used by the ONNX WASM backend)
 
 ## Tech
 

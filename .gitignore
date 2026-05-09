@@ -25,6 +25,7 @@ pnpm-debug.log*
 .cache/
 .parcel-cache/
 coverage/
+*.tsbuildinfo
 
 # Editor and OS files
 .vscode/
@@ -33,4 +34,3 @@ coverage/
 Thumbs.db
 
 .claude
-
