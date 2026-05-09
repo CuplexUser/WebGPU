@@ -30,9 +30,15 @@ export const MessageTypes = {
   SYNTHESIZE: 'synthesize',
   ABORT: 'abort',
 
+  // Inbound — grammar
+  LOAD_GRAMMAR: 'load-grammar',
+  CORRECT: 'correct',
+
   // Outbound
   PROGRESS: 'progress',
   READY: 'ready',
+  GRAMMAR_READY: 'grammar-ready',
+  CORRECTION: 'correction',
   VAD_SPEECH_START: 'vad-speech-start',
   VAD_SPEECH_END: 'vad-speech-end',
   RESULT: 'result',

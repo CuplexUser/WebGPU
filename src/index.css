@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #0f1117;
+  --color-surface: #1a1d27;
+  --color-surface2: #252836;
+  --color-border: #2e3247;
+  --color-accent: #6c63ff;
+  --color-text: #e8eaf0;
+  --color-text-dim: #8b8fa8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+}
+
+@keyframes fade-slide-down {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 3px #ef4444, 0 0 0 6px rgba(239,68,68,0.3); }
+  50%  { box-shadow: 0 0 0 3px #ef4444, 0 0 0 14px rgba(239,68,68,0); }
+  100% { box-shadow: 0 0 0 3px #ef4444, 0 0 0 6px rgba(239,68,68,0.3); }
+}
+
+.animate-fade-in { animation: fade-slide-down 0.25s ease; }
+.animate-pulse-ring { animation: pulse-ring 1.5s ease-in-out infinite; }
